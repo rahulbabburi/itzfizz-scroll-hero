@@ -1,0 +1,167 @@
+/* Scan only src/ for class names, wherever the dev server is started from. */
+@import "tailwindcss" source("..");
+
+@theme {
+  --color-page: #d1d1d1;
+  --color-road: #1e1e1e;
+  --color-trail: #45db7d;
+  --color-ink: #111111;
+  --color-card-lime: #def54f;
+  --color-card-sky: #6ac9ff;
+  --color-card-dark: #333333;
+  --color-card-orange: #fa7328;
+
+  --animate-scroll-hint: scroll-hint 1.6s ease-in-out infinite;
+
+  @keyframes scroll-hint {
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: translateY(200%);
+    }
+  }
+}
+
+@theme inline {
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Elements that GSAP reveals start hidden, but only when JavaScript runs. */
+@media (scripting: enabled) {
+  [data-reveal] {
+    visibility: hidden;
+  }
+}
+
+@layer base {
+  html {
+    /* Same grey as the hero, so no strip shows when a phone's toolbar hides. */
+    background-color: var(--color-page);
+  }
+
+  body {
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  /* --car-w drives the road: car size, road height, side padding, trail overhang.
+     It's rounded to an even pixel count so the moving edges land on whole pixels
+     (a half-pixel edge shows up as a faint line at the side of the road). */
+  .hero {
+    --car-w: round(min(28vw, 60svh), 2px);
+    --road-pad-x: calc(var(--car-w) / 2 + 1rem);
+    --road-pad-y: clamp(0.75rem, 3svh, 2rem);
+  }
+
+  @media (width >= 48rem) {
+    .hero {
+      --car-w: round(min(clamp(220px, 24vw, 400px), 60svh), 2px);
+    }
+  }
+
+  .road {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Car height (the SVG is 2.1:1) plus padding. */
+    min-height: calc(var(--car-w) / 2.1 + 2 * var(--road-pad-y));
+    padding: var(--road-pad-y) var(--road-pad-x);
+    overflow: hidden;
+    background-color: var(--color-road);
+  }
+
+  /* Slides right on scroll. Its right edge is the car's centre and the trail's front. */
+  .mover {
+    position: absolute;
+    inset-block: 0;
+    right: 100%;
+    width: calc(100% + var(--car-w) / 2);
+    will-change: transform;
+  }
+
+  .trail {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background-color: var(--color-trail);
+  }
+
+  /* Slides left by the same amount, so the painted letters never move. */
+  .paint {
+    position: absolute;
+    inset-block: 0;
+    left: 100%;
+    width: 100%;
+    will-change: transform;
+  }
+
+  /* Same box as the road (its width, padding and centring), so both headlines line up. */
+  .paint-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(100% - var(--car-w) / 2);
+    height: 100%;
+    padding: var(--road-pad-y) var(--road-pad-x);
+  }
+
+  .car {
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    width: var(--car-w);
+    translate: -50% -50%;
+  }
+
+  .headline {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 0.75em;
+    font-size: clamp(1.75rem, 9vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .headline-word {
+    display: flex;
+    gap: 0.2em;
+  }
+
+  /* The headline before the car paints it: a faint outline. Geist is a variable font, so
+     its letters are built from overlapping shapes that a plain stroke would show inside
+     them (in L, F...). Painting a road-coloured fill over the stroke hides those lines and
+     leaves only the outer half of the stroke, so it is drawn twice as wide. */
+  .headline-outline {
+    color: var(--color-road);
+    -webkit-text-stroke: max(2px, 0.028em) rgb(255 255 255 / 0.32);
+    paint-order: stroke fill;
+  }
+
+  @media (width >= 48rem) {
+    .headline {
+      font-size: clamp(2rem, 4.6vw, 6rem);
+    }
+
+    .headline-word {
+      gap: 0.3em;
+    }
+  }
+
+  /* Clips each letter for the rise-in; the padding keeps glyph edges from being cut. */
+  .headline-mask {
+    display: inline-block;
+    overflow: hidden;
+    padding-block: 0.08em;
+  }
+
+  .headline-char {
+    display: inline-block;
+  }
+}
